@@ -32,7 +32,7 @@ contract PasswordStore {
 
     /*
      * @notice This allows only the owner to retrieve the password.
-     * @audit there is no newPassword param
+     * @audit there is no newPassword param; function only returns @param s_password
      * @param newPassword The new password to set.
      */
     function getPassword() external view returns (string memory) {
