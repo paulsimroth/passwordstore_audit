@@ -32,3 +32,50 @@ This case shows how anyone can read the password directly from the chain.
     `myPassword`
 
 **Recommended Mitigation:** Due to this vulnerability, the architecture of this contract needs to be rethought. For example the password could bes encrypted off-chain. This in turn would require the user to keep another password for decryption off-chain.
+
+
+### [S-#] `PasswordStore::setPassword` has no access control; anyone could change the password
+
+**Description:** `PasswordStore::setPassword` is extern al and according to the comments `This function allows only the owner to set a new password.` 
+
+```javascript
+    /*
+     * @notice This function allows only the owner to set a new password.
+     * @param newPassword The new password to set.
+     */
+    function setPassword(string memory newPassword) external {
+@>      // @audit any user can send password
+        s_password = newPassword;
+        emit SetNetPassword();
+    }
+```
+
+**Impact:** Anyone can change the password, therefire severly breaking the intended functionality
+
+**Proof of Concept:** add the following test to `PasswordStore.t.sol`.
+
+<details>
+<summary>Test Code</summary>
+
+```javascript
+   function test_anyone_can_set_password(address randomAddress) public {
+      vm.assume(randomAddress != owner);
+      vm.prank(randomAddress);
+      string memory expectedPassword = "myNewPassword";
+      passwordStore.setPassword(expectedPassword);
+
+      vm.prank(owner);
+      string memory actualPassword = passwordStore.getPassword();
+      assertEq(actualPassword, expectedPassword);
+   }
+```
+
+</details>
+
+**Recommended Mitigation:** Add Access control conditional or modifier to `PasswordStore::setPassword`.
+
+```javascript
+   if (msg.sender != s_owner) {
+      revert PasswordStore__NotOwner();
+   }
+```
