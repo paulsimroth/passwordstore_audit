@@ -11,7 +11,7 @@ contract PasswordStore {
     error PasswordStore__NotOwner();
 
     address private s_owner;
-    // @audit s_password is not private; everyone can read this password
+    // @audit s_password is not private; everyone can read this password and therefore not secure
     string private s_password;
 
     event SetNetPassword();
