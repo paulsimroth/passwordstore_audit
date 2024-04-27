@@ -1,4 +1,4 @@
-### [S-#] Variables stored in Storage are visible to anyone; password is not a private password
+### [High-1] Variables stored in Storage are visible to anyone; password is not a private password
 
 **Description:** All data stored on chain is visible to anyone and can be seen on the blockchain. declaring a variable or function as private does not mean it can´t be seen by other people. Therefore the `PasswordStore::s_password` is exposed and not secure. This variable is intended to be only accessed with `PasswordStore::getPassword()`, which is intended to be only called by the contract owner.
 
@@ -34,7 +34,7 @@ This case shows how anyone can read the password directly from the chain.
 **Recommended Mitigation:** Due to this vulnerability, the architecture of this contract needs to be rethought. For example the password could bes encrypted off-chain. This in turn would require the user to keep another password for decryption off-chain.
 
 
-### [S-#] `PasswordStore::setPassword()` has no access control; anyone could change the password
+### [High-2] `PasswordStore::setPassword()` has no access control; anyone could change the password
 
 **Description:** `PasswordStore::setPassword()` is extern al and according to the comments `This function allows only the owner to set a new password.` 
 
@@ -81,7 +81,7 @@ This case shows how anyone can read the password directly from the chain.
 ```
 
 
-### [S-#] `PasswordStore::getPassword()` has no input parameter; the password can´t be changed
+### [Informational-1] `PasswordStore::getPassword()` has no input parameter; the password can´t be changed
 
 **Description:** `PasswordStore::getPassword()` is meant to allow the owner to retrieve the password. According to the comments this function is also meant to make setting a new password possible; `newPassword The new password to set.`. There is no input parameter, making this function not work like this comment suggests. This function only checks if `msg.sender == owner` and returns `PasswordStore:s_password`.
 
