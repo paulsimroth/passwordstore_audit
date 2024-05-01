@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>PasswordStore Audit</title>
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+	<style>
+		/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+		/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+		body {
+			font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+			font-size: var(--vscode-markdown-font-size, 14px);
+			padding: 0 26px;
+			line-height: var(--vscode-markdown-line-height, 22px);
+			word-wrap: break-word;
+		}
+
+		#code-csp-warning {
+			position: fixed;
+			top: 0;
+			right: 0;
+			color: white;
+			margin: 16px;
+			text-align: center;
+			font-size: 12px;
+			font-family: sans-serif;
+			background-color: #444444;
+			cursor: pointer;
+			padding: 6px;
+			box-shadow: 1px 1px 1px rgba(0, 0, 0, .25);
+		}
+
+		#code-csp-warning:hover {
+			text-decoration: none;
+			background-color: #007acc;
+			box-shadow: 2px 2px 2px rgba(0, 0, 0, .25);
+		}
+
+		body.scrollBeyondLastLine {
+			margin-bottom: calc(100vh - 22px);
+		}
+
+		body.showEditorSelection .code-line {
+			position: relative;
+		}
+
+		body.showEditorSelection .code-active-line:before,
+		body.showEditorSelection .code-line:hover:before {
+			content: "";
+			display: block;
+			position: absolute;
+			top: 0;
+			left: -12px;
+			height: 100%;
+		}
+
+		body.showEditorSelection li.code-active-line:before,
+		body.showEditorSelection li.code-line:hover:before {
+			left: -30px;
+		}
+
+		.vscode-light.showEditorSelection .code-active-line:before {
+			border-left: 3px solid rgba(0, 0, 0, 0.15);
+		}
+
+		.vscode-light.showEditorSelection .code-line:hover:before {
+			border-left: 3px solid rgba(0, 0, 0, 0.40);
+		}
+
+		.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+			border-left: none;
+		}
+
+		.vscode-dark.showEditorSelection .code-active-line:before {
+			border-left: 3px solid rgba(255, 255, 255, 0.4);
+		}
+
+		.vscode-dark.showEditorSelection .code-line:hover:before {
+			border-left: 3px solid rgba(255, 255, 255, 0.60);
+		}
+
+		.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+			border-left: none;
+		}
+
+		.vscode-high-contrast.showEditorSelection .code-active-line:before {
+			border-left: 3px solid rgba(255, 160, 0, 0.7);
+		}
+
+		.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+			border-left: 3px solid rgba(255, 160, 0, 1);
+		}
+
+		.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+			border-left: none;
+		}
+
+		img {
+			max-width: 100%;
+			max-height: 100%;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+		a:focus,
+		input:focus,
+		select:focus,
+		textarea:focus {
+			outline: 1px solid -webkit-focus-ring-color;
+			outline-offset: -1px;
+		}
+
+		hr {
+			border: 0;
+			height: 2px;
+			border-bottom: 2px solid;
+		}
+
+		h1 {
+			padding-bottom: 0.3em;
+			line-height: 1.2;
+			border-bottom-width: 1px;
+			border-bottom-style: solid;
+		}
+
+		h1,
+		h2,
+		h3 {
+			font-weight: normal;
+		}
+
+		table {
+			border-collapse: collapse;
+		}
+
+		table>thead>tr>th {
+			text-align: left;
+			border-bottom: 1px solid;
+		}
+
+		table>thead>tr>th,
+		table>thead>tr>td,
+		table>tbody>tr>th,
+		table>tbody>tr>td {
+			padding: 5px 10px;
+		}
+
+		table>tbody>tr+tr>td {
+			border-top: 1px solid;
+		}
+
+		blockquote {
+			margin: 0 7px 0 5px;
+			padding: 0 16px 0 10px;
+			border-left-width: 5px;
+			border-left-style: solid;
+		}
+
+		code {
+			font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+			font-size: 1em;
+			line-height: 1.357em;
+		}
+
+		body.wordWrap pre {
+			white-space: pre-wrap;
+		}
+
+		pre:not(.hljs),
+		pre.hljs code>div {
+			padding: 16px;
+			border-radius: 3px;
+			overflow: auto;
+		}
+
+		pre code {
+			color: var(--vscode-editor-foreground);
+			tab-size: 4;
+		}
+
+		/** Theming */
+
+		.vscode-light pre {
+			background-color: rgba(220, 220, 220, 0.4);
+		}
+
+		.vscode-dark pre {
+			background-color: rgba(10, 10, 10, 0.4);
+		}
+
+		.vscode-high-contrast pre {
+			background-color: rgb(0, 0, 0);
+		}
+
+		.vscode-high-contrast h1 {
+			border-color: rgb(0, 0, 0);
+		}
+
+		.vscode-light table>thead>tr>th {
+			border-color: rgba(0, 0, 0, 0.69);
+		}
+
+		.vscode-dark table>thead>tr>th {
+			border-color: rgba(255, 255, 255, 0.69);
+		}
+
+		.vscode-light h1,
+		.vscode-light hr,
+		.vscode-light table>tbody>tr+tr>td {
+			border-color: rgba(0, 0, 0, 0.18);
+		}
+
+		.vscode-dark h1,
+		.vscode-dark hr,
+		.vscode-dark table>tbody>tr+tr>td {
+			border-color: rgba(255, 255, 255, 0.18);
+		}
+	</style>
+
+	<style>
+		/* Tomorrow Theme */
+		/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+		/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+		/* Tomorrow Comment */
+		.hljs-comment,
+		.hljs-quote {
+			color: #8e908c;
+		}
+
+		/* Tomorrow Red */
+		.hljs-variable,
+		.hljs-template-variable,
+		.hljs-tag,
+		.hljs-name,
+		.hljs-selector-id,
+		.hljs-selector-class,
+		.hljs-regexp,
+		.hljs-deletion {
+			color: #c82829;
+		}
+
+		/* Tomorrow Orange */
+		.hljs-number,
+		.hljs-built_in,
+		.hljs-builtin-name,
+		.hljs-literal,
+		.hljs-type,
+		.hljs-params,
+		.hljs-meta,
+		.hljs-link {
+			color: #f5871f;
+		}
+
+		/* Tomorrow Yellow */
+		.hljs-attribute {
+			color: #eab700;
+		}
+
+		/* Tomorrow Green */
+		.hljs-string,
+		.hljs-symbol,
+		.hljs-bullet,
+		.hljs-addition {
+			color: #718c00;
+		}
+
+		/* Tomorrow Blue */
+		.hljs-title,
+		.hljs-section {
+			color: #4271ae;
+		}
+
+		/* Tomorrow Purple */
+		.hljs-keyword,
+		.hljs-selector-tag {
+			color: #8959a8;
+		}
+
+		.hljs {
+			display: block;
+			overflow-x: auto;
+			color: #4d4d4c;
+			padding: 0.5em;
+		}
+
+		.hljs-emphasis {
+			font-style: italic;
+		}
+
+		.hljs-strong {
+			font-weight: bold;
+		}
+	</style>
+
+	<style>
+		/*
+ * Markdown PDF CSS
+ */
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+			padding: 0 12px;
+		}
+
+		pre {
+			background-color: #f8f8f8;
+			border: 1px solid #cccccc;
+			border-radius: 3px;
+			overflow-x: auto;
+			white-space: pre-wrap;
+			overflow-wrap: break-word;
+		}
+
+		pre:not(.hljs) {
+			padding: 23px;
+			line-height: 19px;
+		}
+
+		blockquote {
+			background: rgba(127, 127, 127, 0.1);
+			border-color: rgba(0, 122, 204, 0.5);
+		}
+
+		.emoji {
+			height: 1.4em;
+		}
+
+		code {
+			font-size: 14px;
+			line-height: 19px;
+		}
+
+		/* for inline code */
+		:not(pre):not(.hljs)>code {
+			color: #C9AE75;
+			/* Change the old color so it seems less like an error */
+			font-size: inherit;
+		}
+
+		/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+		.page {
+			page-break-after: always;
+		}
+	</style>
+
+	<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+
+<body>
+	<script>
+		mermaid.initialize({
+			startOnLoad: true,
+			theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+				? 'dark'
+				: 'default'
+		});
+	</script>
+	<!DOCTYPE html>
+	<html>
+
+	<head>
+		<style>
+			.full-page {
+				width: 100%;
+				height: 100vh;
+				/* This will make the div take up the full viewport height */
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.full-page img {
+				max-width: 200;
+				max-height: 200;
+				margin-bottom: 5rem;
+			}
+
+			.full-page div {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+		</style>
+		<title>PasswordStore Audit</title>
+	</head>
+
+	<body>
+		<div class="full-page">
+			<img src="https://www.paulsimroth.at/_next/image?url=%2Flogo.png&w=256&q=75" alt="Logo" align="center">
+			<div>
+				<h1>Protocol Audit Report</h1>
+				<h3>Prepared by: paulsimroth</h3>
+				<a href="https://www.paulsimroth.at/">paulsimroth.at</a>
+			</div>
+		</div>
+	</body>
+
+	</html>
+	<!-- Your report starts here! -->
+	<p>Prepared by: <a href="https://www.paulsimroth.at">paulsimroth</a>
+		Lead Auditors:</p>
+	<ul>
+		<li>Paul Simroth</li>
+	</ul>
+	<h1 id="table-of-contents">Table of Contents</h1>
+	<ul>
+		<li><a href="#table-of-contents">Table of Contents</a></li>
+		<li><a href="#protocol-summary">Protocol Summary</a></li>
+		<li><a href="#disclaimer">Disclaimer</a></li>
+		<li><a href="#risk-classification">Risk Classification</a></li>
+		<li><a href="#audit-details">Audit Details</a>
+			<ul>
+				<li><a href="#scope">Scope</a></li>
+				<li><a href="#roles">Roles</a></li>
+			</ul>
+		</li>
+		<li><a href="#executive-summary">Executive Summary</a>
+			<ul>
+				<li><a href="#issues-found">Issues found</a></li>
+			</ul>
+		</li>
+		<li><a href="#findings">Findings</a>
+			<ul>
+				<li><a href="#high">High</a>
+					<ul>
+						<li><a
+								href="#high-1-variables-stored-in-storage-are-visible-to-anyone-password-is-not-a-private-password">[High-1]
+								Variables stored in Storage are visible to anyone; password is not a private
+								password</a></li>
+						<li><a
+								href="#high-2-passwordstoresetpassword-has-no-access-control-anyone-could-change-the-password">[High-2]
+								<code>PasswordStore::setPassword()</code> has no access control; anyone could change the
+								password</a></li>
+					</ul>
+				</li>
+				<li><a href="#medium">Medium</a></li>
+				<li><a href="#low">Low</a></li>
+				<li><a href="#informational">Informational</a>
+					<ul>
+						<li><a
+								href="#informational-1-passwordstoregetpassword-has-no-input-parameter-the-password-cant-be-changed">[Informational-1]
+								<code>PasswordStore::getPassword()</code> has no input parameter; the password can´t be
+								changed</a></li>
+					</ul>
+				</li>
+				<li><a href="#gas">Gas</a></li>
+			</ul>
+		</li>
+	</ul>
+	<h1 id="protocol-summary">Protocol Summary</h1>
+	<p>PasswordStore is a protocol designed to be able to restore and retrieve a password of a user. It is designed to
+		be used by a single user. Only the Owner must be able to set and read the password.</p>
+	<h1 id="disclaimer">Disclaimer</h1>
+	<p>The team makes all effort to find as many vulnerabilities in the code in the given time period, but holds no
+		responsibilities for the findings provided in this document. A security audit by the team is not an endorsement
+		of the underlying business or product. The audit was time-boxed and the review of the code was solely on the
+		security aspects of the Solidity implementation of the contracts.</p>
+	<h1 id="risk-classification">Risk Classification</h1>
+	<table>
+		<thead>
+			<tr>
+				<th></th>
+				<th></th>
+				<th>Impact</th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td></td>
+				<td></td>
+				<td>High</td>
+				<td>Medium</td>
+				<td>Low</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>High</td>
+				<td>H</td>
+				<td>H/M</td>
+				<td>M</td>
+			</tr>
+			<tr>
+				<td>Likelihood</td>
+				<td>Medium</td>
+				<td>H/M</td>
+				<td>M</td>
+				<td>M/L</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>Low</td>
+				<td>M</td>
+				<td>M/L</td>
+				<td>L</td>
+			</tr>
+		</tbody>
+	</table>
+	<p>We use the <a href="https://docs.codehawks.com/hawks-auditors/how-to-evaluate-a-finding-severity">CodeHawks</a>
+		severity matrix to determine severity. See the documentation for more details.</p>
+	<h1 id="audit-details">Audit Details</h1>
+	<h2 id="scope">Scope</h2>
+	<pre class="hljs"><code><div>./src
+-- PasswordStore.sol
+</div></code></pre>
+	<h2 id="roles">Roles</h2>
+	<ul>
+		<li>Owner: User who can set and read the password.</li>
+		<li>Outsiders: Should not be able to access the contract functionality.</li>
+	</ul>
+	<h1 id="executive-summary">Executive Summary</h1>
+	<p>Audit exercise as part of the Cyfrin Updraft Auditing course.</p>
+	<h2 id="issues-found">Issues found</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Severtiy</th>
+				<th>Number of Issues found</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>High</td>
+				<td>2</td>
+			</tr>
+			<tr>
+				<td>Medium</td>
+				<td>0</td>
+			</tr>
+			<tr>
+				<td>Low</td>
+				<td>0</td>
+			</tr>
+			<tr>
+				<td>Informational</td>
+				<td>1</td>
+			</tr>
+			<tr>
+				<td>Total</td>
+				<td>3</td>
+			</tr>
+		</tbody>
+	</table>
+	<h1 id="findings">Findings</h1>
+	<h2 id="high">High</h2>
+	<h3 id="high-1-variables-stored-in-storage-are-visible-to-anyone-password-is-not-a-private-password">[High-1]
+		Variables stored in Storage are visible to anyone; password is not a private password</h3>
+	<p><strong>Description:</strong> All data stored on chain is visible to anyone and can be seen on the blockchain.
+		declaring a variable or function as private does not mean it can´t be seen by other people. Therefore the
+		<code>PasswordStore::s_password</code> is exposed and not secure. This variable is intended to be only accessed
+		with <code>PasswordStore::getPassword()</code>, which is intended to be only called by the contract owner.</p>
+	<p><strong>Impact:</strong> Anyone can read the private password, severely breaking the intended functionality of
+		the protocol.</p>
+	<p><strong>Proof of Concept:</strong>
+		This case shows how anyone can read the password directly from the chain.</p>
+	<ol>
+		<li>
+			<p>Run local chain</p>
+			<pre class="hljs"><code><div>make anvil
+</div></code></pre>
+		</li>
+		<li>
+			<p>Deploy the contract</p>
+			<pre class="hljs"><code><div>make deploy
+</div></code></pre>
+		</li>
+		<li>
+			<p>Run cast
+				<code>PasswordStore::s_password</code> is at storage slot <code>1</code>
+			</p>
+			<pre class="hljs"><code><div>cast storage &lt;CONTRACT_ADDRESS&gt; 1 --rpc-url http://127.0.0.1:8545
+</div></code></pre>
+			<p>The output should look like this:
+				<code>0x6d7950617373776f726400000000000000000000000000000000000000000014</code>
+			</p>
+			<p>You can convert it from hex to atring like this:</p>
+			<pre class="hljs"><code><div>cast parse-bytes32-string 0x6d79 50617373776f726400000000000000000000000000000000000000000014
+</div></code></pre>
+			<p>The output is:
+				<code>myPassword</code>
+			</p>
+		</li>
+	</ol>
+	<p><strong>Recommended Mitigation:</strong> Due to this vulnerability, the architecture of this contract needs to be
+		rethought. For example the password could bes encrypted off-chain. This in turn would require the user to keep
+		another password for decryption off-chain.</p>
+	<h3 id="high-2-passwordstoresetpassword-has-no-access-control-anyone-could-change-the-password">[High-2]
+		<code>PasswordStore::setPassword()</code> has no access control; anyone could change the password</h3>
+	<p><strong>Description:</strong> <code>PasswordStore::setPassword()</code> is extern al and according to the
+		comments <code>This function allows only the owner to set a new password.</code></p>
+	<pre class="hljs"><code><div>    <span class="hljs-comment">/*
+     * @notice This function allows only the owner to set a new password.
+     * @param newPassword The new password to set.
+     */</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setPassword</span>(<span class="hljs-params">string memory newPassword</span>) <span class="hljs-title">external</span> </span>{
+@&gt;      <span class="hljs-comment">// @audit any user can send password</span>
+        s_password = newPassword;
+        emit SetNetPassword();
+    }
+</div></code></pre>
+	<p><strong>Impact:</strong> Anyone can change the password, therefire severly breaking the intended functionality
+	</p>
+	<p><strong>Proof of Concept:</strong> add the following test to <code>PasswordStore.t.sol</code>.</p>
+	<details>
+		<summary>Test Code</summary>
+		<pre class="hljs"><code><div>   <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">test_anyone_can_set_password</span>(<span class="hljs-params">address randomAddress</span>) <span class="hljs-title">public</span> </span>{
+      vm.assume(randomAddress != owner);
+      vm.prank(randomAddress);
+      string memory expectedPassword = <span class="hljs-string">"myNewPassword"</span>;
+      passwordStore.setPassword(expectedPassword);
+
+      vm.prank(owner);
+      string memory actualPassword = passwordStore.getPassword();
+      assertEq(actualPassword, expectedPassword);
+   }
+</div></code></pre>
+	</details>
+	<p><strong>Recommended Mitigation:</strong> Add Access control conditional or modifier to
+		<code>PasswordStore::setPassword()****</code>.</p>
+	<pre class="hljs"><code><div>   <span class="hljs-keyword">if</span> (msg.sender != s_owner) {
+      revert PasswordStore__NotOwner();
+   }
+</div></code></pre>
+	<h2 id="medium">Medium</h2>
+	<p>X</p>
+	<h2 id="low">Low</h2>
+	<p>X</p>
+	<h2 id="informational">Informational</h2>
+	<h3 id="informational-1-passwordstoregetpassword-has-no-input-parameter-the-password-can%C2%B4t-be-changed">
+		[Informational-1] <code>PasswordStore::getPassword()</code> has no input parameter; the password can´t be
+		changed</h3>
+	<p><strong>Description:</strong> <code>PasswordStore::getPassword()</code> is meant to allow the owner to retrieve
+		the password. According to the comments this function is also meant to make setting a new password possible;
+		<code>newPassword The new password to set.</code>. There is no input parameter, making this function not work
+		like this comment suggests. This function only checks if <code>msg.sender == owner</code> and returns
+		<code>PasswordStore:s_password</code>.</p>
+	<p><strong>Impact:</strong> This function does not work as the comments suggest. It does not take an input parameter
+		and only returns <code>PasswordStore:s_password</code>. Therefore this function does not work as the comments
+		suggest.</p>
+	<details>
+		<summary>Code</summary>
+		<pre class="hljs"><code><div>    <span class="hljs-comment">/*
+     * @notice This allows only the owner to retrieve the password.
+     * @audit there is no newPassword param; function only returns @param s_password
+     * @param newPassword The new password to set.
+     */</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getPassword</span>(<span class="hljs-params"></span>) <span class="hljs-title">external</span> <span class="hljs-title">view</span> <span class="hljs-title">returns</span> (<span class="hljs-params">string memory</span>) </span>{
+        <span class="hljs-keyword">if</span> (msg.sender != s_owner) {
+            revert PasswordStore__NotOwner();
+        }
+        <span class="hljs-keyword">return</span> s_password;
+    }
+</div></code></pre>
+	</details>
+	<p><strong>Recommended Mitigation:</strong> Leave the function as is but remove the misleading comment.</p>
+	<pre class="hljs"><code><div><span class="hljs-deletion">-   * @param newPassword The new password to set.</span>
+</div></code></pre>
+	<h2 id="gas">Gas</h2>
+	<p>X</p>
+
+</body>
+
+</html>
